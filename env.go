@@ -4,7 +4,9 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"reflect"
 	"strconv"
+	"strings"
 )
 
 var (
@@ -78,22 +80,72 @@ func Parse() error {
 }
 
 func Help() string {
-	help := ""
+	help := strings.Builder{}
+	help.WriteString("Environment variables:\n\n")
+
+	longest := 0
 	for _, v := range vars {
 		switch v := v.(type) {
 		case *Var[int]:
-			help += fmt.Sprintf("%s: %d\n", v.name, v.value)
+			if l := metaLength(v); l > longest {
+				longest = l
+			}
 		case *Var[bool]:
-			help += fmt.Sprintf("%s: %t\n", v.name, v.value)
+			if l := metaLength(v); l > longest {
+				longest = l
+			}
 		case *Var[string]:
-			help += fmt.Sprintf("%s: %s\n", v.name, v.value)
+			if l := metaLength(v); l > longest {
+				longest = l
+			}
 		case *Var[float64]:
-			help += fmt.Sprintf("%s: %f\n", v.name, v.value)
+			if l := metaLength(v); l > longest {
+				longest = l
+			}
 		default:
 			panic("unsupported type")
 		}
 	}
-	return help
+
+	for _, v := range vars {
+		switch v := v.(type) {
+		case *Var[int]:
+			_, _ = help.WriteString(getHelpString(v, longest))
+		case *Var[bool]:
+			_, _ = help.WriteString(getHelpString(v, longest))
+		case *Var[string]:
+			_, _ = help.WriteString(getHelpString(v, longest))
+		case *Var[float64]:
+			_, _ = help.WriteString(getHelpString(v, longest))
+		default:
+			panic("unsupported type")
+		}
+	}
+
+	return help.String()
+}
+
+func metaLength[T TypeConstraint](v *Var[T]) int {
+	// +5 for :, spaces and parentheses
+	l := len(v.name) + len(reflect.TypeOf(v.value).String()) + 5
+	if v.required {
+		l += 8
+	}
+	return l
+}
+
+func getHelpString[T TypeConstraint](v *Var[T], longest int) string {
+	defaultInfo := ""
+	typeInfo := reflect.TypeOf(v.value).String()
+	if v.required {
+		typeInfo += ", required"
+	} else {
+		defaultInfo = fmt.Sprintf("(default: %v)", v.value)
+	}
+	name := fmt.Sprintf("%s (%s)", v.name, typeInfo)
+
+	// <name> (<type>, [required]): <description> [(default: <value>)]\n
+	return fmt.Sprintf("%-*s: %s %s\n", longest, name, v.desc, defaultInfo)
 }
 
 func check[T TypeConstraint](v *Var[T], parser func(string) (T, error)) error {

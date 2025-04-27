@@ -30,7 +30,7 @@ var (
 func main() {
   // Exits with exit code 1 in case the registered environment variables could
   // not be parsed according to the rules you set up.
-  env.Parse()
+  _ = env.Parse()
 
   logging.SetLogLevel(logLevel.Value())
   ...
