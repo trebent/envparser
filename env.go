@@ -13,9 +13,10 @@ var (
 	vars    = make([]any, 0, 1)
 	nameMap map[string]bool
 
-	ErrName       = errors.New("name is invalid")
-	ErrNameExists = errors.New("name already exists")
-	ErrRequired   = errors.New("variable is required")
+	ErrName              = errors.New("name is invalid")
+	ErrNameExists        = errors.New("name already exists")
+	ErrRequired          = errors.New("variable is required")
+	ErrCreateAndRequired = errors.New("variable can't be marked for creation and required at the same time")
 
 	// If set, encountered errors are printed to stderr and the program exits
 	// with code 1. If not set, errors are returned to the caller.
@@ -29,6 +30,7 @@ func Register[T TypeConstraint](opts *Opts[T]) *Var[T] {
 		desc:     opts.Desc,
 		value:    opts.Value,
 		required: opts.Required,
+		create:   opts.Create,
 	}
 	vars = append(vars, v)
 	return v
@@ -160,6 +162,8 @@ func check[T TypeConstraint](v *Var[T], parser func(string) (T, error)) error {
 			return err
 		}
 		v.value = parsedValue
+	} else if !exists && v.create {
+		os.Setenv(v.name, fmt.Sprintf("%v", v.value))
 	}
 
 	return nil
@@ -177,6 +181,10 @@ func generalCheck[T TypeConstraint](v *Var[T], exists bool) error {
 
 	if v.required && !exists {
 		return fmt.Errorf("%w: %s", ErrRequired, v.name)
+	}
+
+	if v.required && v.create {
+		return fmt.Errorf("%w: %s", ErrCreateAndRequired, v.name)
 	}
 
 	return nil

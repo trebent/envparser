@@ -35,6 +35,28 @@ func TestRequired(t *testing.T) {
 	wg.Wait()
 }
 
+func TestCreate(t *testing.T) {
+	defer func() {
+		vars = make([]any, 0, 1)
+	}()
+	_ = Register(&Opts[string]{
+		Name:   "TEST_CREATE",
+		Value:  "test",
+		Create: true,
+	})
+	defer os.Unsetenv("TEST_CREATE")
+
+	Parse()
+
+	value, exists := os.LookupEnv("TEST_CREATE")
+	if !exists {
+		t.Errorf("expected TEST_CREATE to be set")
+	}
+	if value != "test" {
+		t.Errorf("expected TEST_CREATE to be 'test', got '%s'", value)
+	}
+}
+
 func TestParse(t *testing.T) {
 	defer func() {
 		vars = make([]any, 0, 1)

@@ -28,6 +28,8 @@ var (
 )
 
 func main() {
+  fl
+
   // Exits with exit code 1 in case the registered environment variables could
   // not be parsed according to the rules you set up.
   _ = env.Parse()
@@ -36,3 +38,7 @@ func main() {
   ...
 }
 ```
+
+## Documentation
+
+See the [Golang package](https://pkg.go.dev/github.com/). Documentation is provided as package and type definitions.
