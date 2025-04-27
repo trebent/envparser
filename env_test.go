@@ -7,9 +7,9 @@ import (
 )
 
 func TestRequired(t *testing.T) {
-	defer func() {
+	t.Cleanup(func() {
 		vars = make([]any, 0, 1)
-	}()
+	})
 	_ = Register(&Opts[int]{
 		Name:     "TEST_REQUIRED",
 		Required: true,
@@ -19,8 +19,7 @@ func TestRequired(t *testing.T) {
 		Required: true,
 	})
 
-	os.Setenv("TEST_REQUIRED", "1")
-	defer os.Unsetenv("TEST_REQUIRED")
+	t.Setenv("TEST_REQUIRED", "1")
 
 	ExitOnError = false
 	if err := Parse(); err == nil {
@@ -29,15 +28,15 @@ func TestRequired(t *testing.T) {
 }
 
 func TestCreate(t *testing.T) {
-	defer func() {
+	t.Cleanup(func() {
 		vars = make([]any, 0, 1)
-	}()
+		os.Unsetenv("TEST_CREATE")
+	})
 	_ = Register(&Opts[string]{
 		Name:   "TEST_CREATE",
 		Value:  "test",
 		Create: true,
 	})
-	defer os.Unsetenv("TEST_CREATE")
 
 	ExitOnError = false
 	if err := Parse(); err != nil {
@@ -54,9 +53,9 @@ func TestCreate(t *testing.T) {
 }
 
 func TestValidate(t *testing.T) {
-	defer func() {
+	t.Cleanup(func() {
 		vars = make([]any, 0, 1)
-	}()
+	})
 	v := Register(&Opts[int]{
 		Name: "TEST_VALIDATE",
 		Validate: func(i int) error {
@@ -67,8 +66,7 @@ func TestValidate(t *testing.T) {
 		},
 	})
 
-	os.Setenv("TEST_VALIDATE", "10")
-	defer os.Unsetenv("TEST_VALIDATE")
+	t.Setenv("TEST_VALIDATE", "10")
 
 	ExitOnError = false
 	if err := Parse(); err != nil {
@@ -81,9 +79,9 @@ func TestValidate(t *testing.T) {
 }
 
 func TestValidateNonExistentVar(t *testing.T) {
-	defer func() {
+	t.Cleanup(func() {
 		vars = make([]any, 0, 1)
-	}()
+	})
 	_ = Register(&Opts[int]{
 		Name: "TEST_VALIDATE",
 		Validate: func(i int) error {
@@ -101,9 +99,9 @@ func TestValidateNonExistentVar(t *testing.T) {
 }
 
 func TestValidateAndAccepted(t *testing.T) {
-	defer func() {
+	t.Cleanup(func() {
 		vars = make([]any, 0, 1)
-	}()
+	})
 	_ = Register(&Opts[int]{
 		Name: "TEST_VALIDATE",
 		Validate: func(i int) error {
@@ -122,9 +120,9 @@ func TestValidateAndAccepted(t *testing.T) {
 }
 
 func TestValidateFailure(t *testing.T) {
-	defer func() {
+	t.Cleanup(func() {
 		vars = make([]any, 0, 1)
-	}()
+	})
 	_ = Register(&Opts[int]{
 		Name: "TEST_VALIDATE",
 		Validate: func(i int) error {
@@ -135,8 +133,7 @@ func TestValidateFailure(t *testing.T) {
 		},
 	})
 
-	os.Setenv("TEST_VALIDATE", "5")
-	defer os.Unsetenv("TEST_VALIDATE")
+	t.Setenv("TEST_VALIDATE", "5")
 
 	ExitOnError = false
 	if err := Parse(); err == nil {
@@ -145,16 +142,15 @@ func TestValidateFailure(t *testing.T) {
 }
 
 func TestAcceptedFailure(t *testing.T) {
-	defer func() {
+	t.Cleanup(func() {
 		vars = make([]any, 0, 1)
-	}()
+	})
 	_ = Register(&Opts[int]{
 		Name:           "PORT",
 		AcceptedValues: []int{80, 443},
 	})
 
-	os.Setenv("PORT", "334")
-	defer os.Unsetenv("PORT")
+	t.Setenv("PORT", "334")
 
 	ExitOnError = false
 	if err := Parse(); err == nil {
@@ -163,9 +159,9 @@ func TestAcceptedFailure(t *testing.T) {
 }
 
 func TestParse(t *testing.T) {
-	defer func() {
+	t.Cleanup(func() {
 		vars = make([]any, 0, 1)
-	}()
+	})
 	i := Register(&Opts[int]{
 		Name:  "TEST",
 		Value: 1,
@@ -183,18 +179,14 @@ func TestParse(t *testing.T) {
 		Value: 1.0,
 	})
 
-	os.Setenv("TEST", "2")
-	os.Setenv("TEST_BOOL", "false")
-	os.Setenv("TEST_STRING", "test2")
-	os.Setenv("TEST_FLOAT", "2.0")
-	defer func() {
-		os.Unsetenv("TEST")
-		os.Unsetenv("TEST_BOOL")
-		os.Unsetenv("TEST_STRING")
-		os.Unsetenv("TEST_FLOAT")
-	}()
+	t.Setenv("TEST", "2")
+	t.Setenv("TEST_BOOL", "false")
+	t.Setenv("TEST_STRING", "test2")
+	t.Setenv("TEST_FLOAT", "2.0")
 
-	Parse()
+	if err := Parse(); err != nil {
+		t.Errorf("expected no error, got %v", err)
+	}
 
 	if i.Value() != 2 {
 		t.Errorf("expected 2, got %d", i.Value())

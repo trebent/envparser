@@ -1,4 +1,4 @@
-// envparser is a simple no-dependency library for parsing environment variables in Go.
+// Package envparser is a simple no-dependency library for parsing environment variables in Go.
 package envparser
 
 import (
@@ -12,9 +12,12 @@ import (
 )
 
 var (
-	vars    = make([]any, 0, 1)
+	//nolint:gochecknoglobals
+	vars = make([]any, 0, 1)
+	//nolint:gochecknoglobals
 	nameMap map[string]bool
-	parsed  = false
+	//nolint:gochecknoglobals
+	parsed = false
 
 	ErrName                = errors.New("variable name is invalid")
 	ErrNameExists          = errors.New("variable name already exists")
@@ -24,10 +27,12 @@ var (
 	ErrValidate            = errors.New("variable validation failed")
 	ErrAccepted            = errors.New("variable value not in accepted values")
 
-	// If set, encountered errors are printed to stderr and the program exits
-	// with code 1. If not set, errors are returned to the caller.
+	// ExitOnError ensures that encountered errors are printed to stderr and the
+	// program exits with code 1. If not set, errors are returned to the caller.
+	//nolint:gochecknoglobals
 	ExitOnError = true
-	exitFunc    = os.Exit
+	//nolint:gochecknoglobals
+	exitFunc = os.Exit
 )
 
 // Register a variable with the given options. Returns a pointer to the
@@ -55,25 +60,21 @@ func Parse() error {
 
 	errs := []error{}
 	for _, v := range vars {
+		var err error
 		switch v := v.(type) {
 		case *Var[int]:
-			if err := check(v, parseInt); err != nil {
-				errs = append(errs, err)
-			}
+			err = check(v, parseInt)
 		case *Var[bool]:
-			if err := check(v, parseBool); err != nil {
-				errs = append(errs, err)
-			}
+			err = check(v, parseBool)
 		case *Var[string]:
-			if err := check(v, parseString); err != nil {
-				errs = append(errs, err)
-			}
+			err = check(v, parseString)
 		case *Var[float64]:
-			if err := check(v, parseFloat); err != nil {
-				errs = append(errs, err)
-			}
+			err = check(v, parseFloat)
 		default:
 			panic("unsupported type")
+		}
+		if err != nil {
+			errs = append(errs, err)
 		}
 	}
 
@@ -88,9 +89,9 @@ func Parse() error {
 			fmt.Fprintf(os.Stderr, "\n%s\n", Help())
 			exitFunc(1)
 			return nil // for testing purposes
-		} else {
-			return fmt.Errorf("failed to parse env vars: %w", errors.Join(errs...))
 		}
+
+		return fmt.Errorf("failed to parse env vars: %w", errors.Join(errs...))
 	}
 
 	return nil
@@ -147,7 +148,8 @@ func Help() string {
 
 func metaLength[T TypeConstraint](v *Var[T]) int {
 	// +5 for :, spaces and parentheses
-	l := len(v.name) + len(reflect.TypeOf(v.value).String()) + 5
+	const padding = 5
+	l := len(v.name) + len(reflect.TypeOf(v.value).String()) + padding
 	if v.required {
 		l += 8
 	}
@@ -174,26 +176,33 @@ func check[T TypeConstraint](v *Var[T], parser func(string) (T, error)) error {
 		return err
 	}
 
-	if exists {
-		parsedValue, err := parser(value)
-		if err != nil {
-			return err
-		}
-
-		if v.validate != nil {
-			if err := v.validate(parsedValue); err != nil {
-				return fmt.Errorf("%w: %w", fmt.Errorf("%w: %s", ErrValidate, v.name), err)
-			}
-		} else if v.acceptedValues != nil {
-			if !slices.Contains(v.acceptedValues, parsedValue) {
-				return fmt.Errorf("%w: %s %v", ErrAccepted, v.name, v.acceptedValues)
-			}
-		}
-
-		v.value = parsedValue
-	} else if !exists && v.create {
-		os.Setenv(v.name, fmt.Sprintf("%v", v.value))
+	if !exists && !v.create {
+		return nil
 	}
+
+	if !exists && v.create {
+		return os.Setenv(v.name, fmt.Sprintf("%v", v.value))
+	}
+
+	parsedValue, err := parser(value)
+	if err != nil {
+		return err
+	}
+
+	if v.validate != nil {
+		//nolint:govet
+		if err := v.validate(parsedValue); err != nil {
+			return fmt.Errorf("%w: %w", fmt.Errorf("%w: %s", ErrValidate, v.name), err)
+		}
+	}
+
+	if v.acceptedValues != nil {
+		if !slices.Contains(v.acceptedValues, parsedValue) {
+			return fmt.Errorf("%w: %s %v", ErrAccepted, v.name, v.acceptedValues)
+		}
+	}
+
+	v.value = parsedValue
 
 	return nil
 }
@@ -226,7 +235,7 @@ func generalCheck[T TypeConstraint](v *Var[T], exists bool) error {
 func parseInt(value string) (int, error) {
 	i, err := strconv.ParseInt(value, 10, 0)
 	if err != nil {
-		return 0, nil
+		return 0, err
 	}
 	return int(i), nil
 }
