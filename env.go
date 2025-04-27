@@ -17,6 +17,7 @@ var (
 	ErrNameExists        = errors.New("name already exists")
 	ErrRequired          = errors.New("variable is required")
 	ErrCreateAndRequired = errors.New("variable can't be marked for creation and required at the same time")
+	ErrValidate          = errors.New("validation failed")
 
 	// If set, encountered errors are printed to stderr and the program exits
 	// with code 1. If not set, errors are returned to the caller.
@@ -24,6 +25,8 @@ var (
 	exitFunc    = os.Exit
 )
 
+// Register a variable with the given options. Returns a pointer to the
+// registered variable.
 func Register[T TypeConstraint](opts *Opts[T]) *Var[T] {
 	v := &Var[T]{
 		name:     opts.Name,
@@ -31,11 +34,15 @@ func Register[T TypeConstraint](opts *Opts[T]) *Var[T] {
 		value:    opts.Value,
 		required: opts.Required,
 		create:   opts.Create,
+		validate: opts.Validate,
 	}
 	vars = append(vars, v)
 	return v
 }
 
+// Parse parses the environment variables registered with Register. If an error
+// occurs, it will be returned. If ExitOnError is set, the program will exit
+// with code 1 and print the error to stderr.
 func Parse() error {
 	nameMap = make(map[string]bool, len(vars))
 
@@ -67,10 +74,11 @@ func Parse() error {
 
 	if len(errs) > 0 {
 		if ExitOnError {
+			fmt.Fprint(os.Stderr, "Errors:\n")
 			for _, err := range errs {
 				fmt.Fprintf(os.Stderr, "%s\n", err.Error())
 			}
-			fmt.Fprintf(os.Stderr, "%s\n", Help())
+			fmt.Fprintf(os.Stderr, "\n%s\n", Help())
 			exitFunc(1)
 			return nil // for testing purposes
 		} else {
@@ -160,6 +168,12 @@ func check[T TypeConstraint](v *Var[T], parser func(string) (T, error)) error {
 		parsedValue, err := parser(value)
 		if err != nil {
 			return err
+		}
+
+		if v.validate != nil {
+			if err := v.validate(parsedValue); err != nil {
+				return fmt.Errorf("%w: %w", fmt.Errorf("%w: %s", ErrValidate, v.name), err)
+			}
 		}
 		v.value = parsedValue
 	} else if !exists && v.create {

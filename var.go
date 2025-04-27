@@ -18,6 +18,8 @@ type (
 		// Forces the creation of the variable, *if it does not exist*. This results
 		// in setting the environment variable with `os.SetEnv()`.
 		Create bool
+		// Validates the parsed value.
+		Validate func(T) error
 	}
 	Var[T TypeConstraint] struct {
 		name     string
@@ -25,6 +27,7 @@ type (
 		value    T
 		required bool
 		create   bool
+		validate func(T) error
 	}
 )
 

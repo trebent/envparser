@@ -1,6 +1,7 @@
 package envparser
 
 import (
+	"fmt"
 	"os"
 	"sync"
 	"testing"
@@ -55,6 +56,76 @@ func TestCreate(t *testing.T) {
 	if value != "test" {
 		t.Errorf("expected TEST_CREATE to be 'test', got '%s'", value)
 	}
+}
+
+func TestValidate(t *testing.T) {
+	defer func() {
+		vars = make([]any, 0, 1)
+	}()
+	v := Register(&Opts[int]{
+		Name: "TEST_VALIDATE",
+		Validate: func(i int) error {
+			if i != 10 {
+				return fmt.Errorf("expected 10, got %d", i)
+			}
+			return nil
+		},
+	})
+
+	os.Setenv("TEST_VALIDATE", "10")
+	defer os.Unsetenv("TEST_VALIDATE")
+
+	_ = Parse()
+
+	if v.Value() != 10 {
+		t.Errorf("expected 10, got %d", v.Value())
+	}
+}
+
+func TestValidateNonExistentVar(t *testing.T) {
+	defer func() {
+		vars = make([]any, 0, 1)
+	}()
+	_ = Register(&Opts[int]{
+		Name: "TEST_VALIDATE",
+		Validate: func(i int) error {
+			if i != 10 {
+				return fmt.Errorf("expected 10, got %d", i)
+			}
+			return nil
+		},
+	})
+
+	_ = Parse()
+}
+
+func TestValidateFailure(t *testing.T) {
+	defer func() {
+		vars = make([]any, 0, 1)
+	}()
+	_ = Register(&Opts[int]{
+		Name: "TEST_VALIDATE",
+		Validate: func(i int) error {
+			if i != 10 {
+				return fmt.Errorf("expected 10, got %d", i)
+			}
+			return nil
+		},
+	})
+
+	os.Setenv("TEST_VALIDATE", "5")
+	defer os.Unsetenv("TEST_VALIDATE")
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+	exitFunc = func(code int) {
+		wg.Done()
+	}
+	defer func() {
+		exitFunc = os.Exit
+	}()
+
+	_ = Parse()
+	wg.Wait()
 }
 
 func TestParse(t *testing.T) {
