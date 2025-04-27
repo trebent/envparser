@@ -31,13 +31,13 @@ formatters:
     #- gofumpt # [replaced by goimports, gofumports is not available yet] checks if code and import statements are formatted, with additional rules
 
   # All settings can be found here https://github.com/golangci/golangci-lint/blob/HEAD/.golangci.reference.yml
-  settings:
-    goimports:
+  # settings:
+    # goimports:
       # A list of prefixes, which, if set, checks import paths
       # with the given prefixes are grouped after 3rd-party packages.
       # Default: []
 
-    golines:
+    # golines:
       # Target maximum line length.
       # Default: 100
 
