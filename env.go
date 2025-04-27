@@ -19,10 +19,12 @@ var (
 	//nolint:gochecknoglobals
 	parsed = false
 
-	ErrName                = errors.New("variable name is invalid")
-	ErrNameExists          = errors.New("variable name already exists")
-	ErrRequired            = errors.New("variable is required")
-	ErrCreateAndRequired   = errors.New("variable can't be marked for creation and required at the same time")
+	ErrName              = errors.New("variable name is invalid")
+	ErrNameExists        = errors.New("variable name already exists")
+	ErrRequired          = errors.New("variable is required")
+	ErrCreateAndRequired = errors.New(
+		"variable can't be marked for creation and required at the same time",
+	)
 	ErrValidateAndAccepted = errors.New("variable can't use both validate and accepted values")
 	ErrValidate            = errors.New("variable validation failed")
 	ErrAccepted            = errors.New("variable value not in accepted values")
