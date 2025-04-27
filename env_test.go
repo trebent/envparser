@@ -3,7 +3,6 @@ package envparser
 import (
 	"fmt"
 	"os"
-	"sync"
 	"testing"
 )
 
@@ -23,17 +22,10 @@ func TestRequired(t *testing.T) {
 	os.Setenv("TEST_REQUIRED", "1")
 	defer os.Unsetenv("TEST_REQUIRED")
 
-	wg := sync.WaitGroup{}
-	wg.Add(1)
-	exitFunc = func(code int) {
-		wg.Done()
+	ExitOnError = false
+	if err := Parse(); err == nil {
+		t.Error("expected error, got nothing")
 	}
-	defer func() {
-		exitFunc = os.Exit
-	}()
-
-	Parse()
-	wg.Wait()
 }
 
 func TestCreate(t *testing.T) {
@@ -47,7 +39,10 @@ func TestCreate(t *testing.T) {
 	})
 	defer os.Unsetenv("TEST_CREATE")
 
-	Parse()
+	ExitOnError = false
+	if err := Parse(); err != nil {
+		t.Errorf("expected no error, got %v", err)
+	}
 
 	value, exists := os.LookupEnv("TEST_CREATE")
 	if !exists {
@@ -75,7 +70,10 @@ func TestValidate(t *testing.T) {
 	os.Setenv("TEST_VALIDATE", "10")
 	defer os.Unsetenv("TEST_VALIDATE")
 
-	_ = Parse()
+	ExitOnError = false
+	if err := Parse(); err != nil {
+		t.Errorf("expected no error, got %v", err)
+	}
 
 	if v.Value() != 10 {
 		t.Errorf("expected 10, got %d", v.Value())
@@ -96,7 +94,31 @@ func TestValidateNonExistentVar(t *testing.T) {
 		},
 	})
 
-	_ = Parse()
+	ExitOnError = false
+	if err := Parse(); err != nil {
+		t.Errorf("expected no error, got %v", err)
+	}
+}
+
+func TestValidateAndAccepted(t *testing.T) {
+	defer func() {
+		vars = make([]any, 0, 1)
+	}()
+	_ = Register(&Opts[int]{
+		Name: "TEST_VALIDATE",
+		Validate: func(i int) error {
+			if i != 10 {
+				return fmt.Errorf("expected 10, got %d", i)
+			}
+			return nil
+		},
+		AcceptedValues: []int{10, 20},
+	})
+
+	ExitOnError = false
+	if err := Parse(); err == nil {
+		t.Error("expected error, got nothing")
+	}
 }
 
 func TestValidateFailure(t *testing.T) {
@@ -115,17 +137,29 @@ func TestValidateFailure(t *testing.T) {
 
 	os.Setenv("TEST_VALIDATE", "5")
 	defer os.Unsetenv("TEST_VALIDATE")
-	wg := sync.WaitGroup{}
-	wg.Add(1)
-	exitFunc = func(code int) {
-		wg.Done()
-	}
-	defer func() {
-		exitFunc = os.Exit
-	}()
 
-	_ = Parse()
-	wg.Wait()
+	ExitOnError = false
+	if err := Parse(); err == nil {
+		t.Error("expected error, got nothing")
+	}
+}
+
+func TestAcceptedFailure(t *testing.T) {
+	defer func() {
+		vars = make([]any, 0, 1)
+	}()
+	_ = Register(&Opts[int]{
+		Name:           "PORT",
+		AcceptedValues: []int{80, 443},
+	})
+
+	os.Setenv("PORT", "334")
+	defer os.Unsetenv("PORT")
+
+	ExitOnError = false
+	if err := Parse(); err == nil {
+		t.Error("expected error, got nothing")
+	}
 }
 
 func TestParse(t *testing.T) {

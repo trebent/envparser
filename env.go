@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"reflect"
+	"slices"
 	"strconv"
 	"strings"
 )
@@ -13,11 +14,13 @@ var (
 	vars    = make([]any, 0, 1)
 	nameMap map[string]bool
 
-	ErrName              = errors.New("name is invalid")
-	ErrNameExists        = errors.New("name already exists")
-	ErrRequired          = errors.New("variable is required")
-	ErrCreateAndRequired = errors.New("variable can't be marked for creation and required at the same time")
-	ErrValidate          = errors.New("validation failed")
+	ErrName                = errors.New("variable name is invalid")
+	ErrNameExists          = errors.New("variable name already exists")
+	ErrRequired            = errors.New("variable is required")
+	ErrCreateAndRequired   = errors.New("variable can't be marked for creation and required at the same time")
+	ErrValidateAndAccepted = errors.New("variable can't use both validate and accepted values")
+	ErrValidate            = errors.New("variable validation failed")
+	ErrAccepted            = errors.New("variable value not in accepted values")
 
 	// If set, encountered errors are printed to stderr and the program exits
 	// with code 1. If not set, errors are returned to the caller.
@@ -29,12 +32,13 @@ var (
 // registered variable.
 func Register[T TypeConstraint](opts *Opts[T]) *Var[T] {
 	v := &Var[T]{
-		name:     opts.Name,
-		desc:     opts.Desc,
-		value:    opts.Value,
-		required: opts.Required,
-		create:   opts.Create,
-		validate: opts.Validate,
+		name:           opts.Name,
+		desc:           opts.Desc,
+		value:          opts.Value,
+		required:       opts.Required,
+		create:         opts.Create,
+		validate:       opts.Validate,
+		acceptedValues: opts.AcceptedValues,
 	}
 	vars = append(vars, v)
 	return v
@@ -174,7 +178,12 @@ func check[T TypeConstraint](v *Var[T], parser func(string) (T, error)) error {
 			if err := v.validate(parsedValue); err != nil {
 				return fmt.Errorf("%w: %w", fmt.Errorf("%w: %s", ErrValidate, v.name), err)
 			}
+		} else if v.acceptedValues != nil {
+			if !slices.Contains(v.acceptedValues, parsedValue) {
+				return fmt.Errorf("%w: %s %v", ErrAccepted, v.name, v.acceptedValues)
+			}
 		}
+
 		v.value = parsedValue
 	} else if !exists && v.create {
 		os.Setenv(v.name, fmt.Sprintf("%v", v.value))
@@ -199,6 +208,10 @@ func generalCheck[T TypeConstraint](v *Var[T], exists bool) error {
 
 	if v.required && v.create {
 		return fmt.Errorf("%w: %s", ErrCreateAndRequired, v.name)
+	}
+
+	if v.validate != nil && v.acceptedValues != nil {
+		return fmt.Errorf("%w: %s", ErrValidateAndAccepted, v.name)
 	}
 
 	return nil

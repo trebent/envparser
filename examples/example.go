@@ -20,9 +20,10 @@ var (
 		Required: true,
 	})
 	serverPort = envparser.Register(&envparser.Opts[int]{
-		Name:     "SERVER_PORT",
-		Desc:     "Server port.",
-		Required: true,
+		Name:           "SERVER_PORT",
+		Desc:           "Server port.",
+		Required:       true,
+		AcceptedValues: []int{80, 443},
 	})
 )
 

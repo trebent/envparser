@@ -20,14 +20,19 @@ type (
 		Create bool
 		// Validates the parsed value.
 		Validate func(T) error
+		// A list of accepted values for the variable. If set, the value must be one
+		// of the accepted values. This is a convenience for the Validate function.
+		// If set, the Validate function is ignored.
+		AcceptedValues []T
 	}
 	Var[T TypeConstraint] struct {
-		name     string
-		desc     string
-		value    T
-		required bool
-		create   bool
-		validate func(T) error
+		name           string
+		desc           string
+		value          T
+		required       bool
+		create         bool
+		validate       func(T) error
+		acceptedValues []T
 	}
 )
 
