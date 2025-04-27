@@ -1,3 +1,4 @@
+// envparser is a simple no-dependency library for parsing environment variables in Go.
 package envparser
 
 import (
@@ -13,6 +14,7 @@ import (
 var (
 	vars    = make([]any, 0, 1)
 	nameMap map[string]bool
+	parsed  = false
 
 	ErrName                = errors.New("variable name is invalid")
 	ErrNameExists          = errors.New("variable name already exists")
@@ -48,6 +50,7 @@ func Register[T TypeConstraint](opts *Opts[T]) *Var[T] {
 // occurs, it will be returned. If ExitOnError is set, the program will exit
 // with code 1 and print the error to stderr.
 func Parse() error {
+	defer func() { parsed = true }()
 	nameMap = make(map[string]bool, len(vars))
 
 	errs := []error{}
@@ -93,6 +96,9 @@ func Parse() error {
 	return nil
 }
 
+// Help returns a string with the help information for all registered
+// environment variables. The help information includes the name, type,
+// description, and default value (if applicable) for each variable.
 func Help() string {
 	help := strings.Builder{}
 	help.WriteString("Environment variables:\n\n")

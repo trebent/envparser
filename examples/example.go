@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"slices"
 
 	"github.com/trebent/envparser"
 )
@@ -12,11 +13,27 @@ var (
 	logLevel = envparser.Register(&envparser.Opts[string]{
 		Name:  "LOG_LEVEL",
 		Value: "INFO",
-		Desc:  "Log level.",
+		Validate: func(level string) error {
+			acceptedLevels := []string{"DEBUG", "INFO", "WARN", "ERROR", "FATAL"}
+			if !slices.Contains(acceptedLevels, level) {
+				return fmt.Errorf("invalid log level: %s, accepted values are: %v", level, acceptedLevels)
+			}
+			return nil
+		},
+		Desc: "Log level.",
 	})
 	serverAddr = envparser.Register(&envparser.Opts[string]{
-		Name:     "SERVER_ADDR",
-		Desc:     "Server address.",
+		Name: "SERVER_ADDR",
+		Desc: "Server address.",
+		Validate: func(addr string) error {
+			if addr == "" {
+				return fmt.Errorf("address can't be empty")
+			}
+			if len(addr) > 255 {
+				return fmt.Errorf("address too long")
+			}
+			return nil
+		},
 		Required: true,
 	})
 	serverPort = envparser.Register(&envparser.Opts[int]{

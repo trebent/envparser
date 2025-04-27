@@ -1,9 +1,13 @@
 package envparser
 
 type (
+	// TypeConstraint is a type constraint that allows only int, bool, string,
+	// and float64 types. This is used to restrict the types of the environment
+	// variables that can be parsed.
 	TypeConstraint interface {
 		~int | ~bool | ~string | ~float64
 	}
+	// Opts is a struct that defines the options for an environment variable.
 	Opts[T TypeConstraint] struct {
 		// Name of the environment variable, as expected in the environment.
 		// For example: "LOG_LEVEL".
@@ -25,6 +29,8 @@ type (
 		// If set, the Validate function is ignored.
 		AcceptedValues []T
 	}
+	// Var is a struct that represents an environment variable. The only public
+	// method is Value(), which returns the value of the variable.
 	Var[T TypeConstraint] struct {
 		name           string
 		desc           string
@@ -36,6 +42,11 @@ type (
 	}
 )
 
+// Value returns the parsed value of the environment variable. Raises a panic
+// if called prior to `Parse()`.
 func (v *Var[T]) Value() T {
+	if !parsed {
+		panic("called before Parse()")
+	}
 	return v.value
 }
