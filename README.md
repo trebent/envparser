@@ -28,7 +28,14 @@ var (
 )
 
 func main() {
-  fl
+  // Output the environment parser help text to stdout when --help is executed.
+  flag.CommandLine.SetOutput(os.Stdout)
+	flag.Usage = func() {
+		fmt.Fprintf(flag.CommandLine.Output(), "Usage of %s:\n", os.Args[0])
+		fmt.Fprintf(flag.CommandLine.Output(), "\n")
+		fmt.Fprintf(flag.CommandLine.Output(), envparser.Help())
+	}
+	flag.Parse()
 
   // Exits with exit code 1 in case the registered environment variables could
   // not be parsed according to the rules you set up.
