@@ -1,5 +1,7 @@
 # envparser
 
+[![Lint, test, and build](https://github.com/trebent/envparser/actions/workflows/build.yaml/badge.svg)](https://github.com/trebent/envparser/actions/workflows/build.yaml)
+
 Declare your application environment variables in a standardised way!
 
 ## Purpose and usage
