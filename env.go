@@ -25,9 +25,8 @@ var (
 	ErrCreateAndRequired = errors.New(
 		"variable can't be marked for creation and required at the same time",
 	)
-	ErrValidateAndAccepted = errors.New("variable can't use both validate and accepted values")
-	ErrValidate            = errors.New("variable validation failed")
-	ErrAccepted            = errors.New("variable value not in accepted values")
+	ErrValidate = errors.New("variable validation failed")
+	ErrAccepted = errors.New("variable value not in accepted values")
 
 	// ExitOnError ensures that encountered errors are printed to stderr and the
 	// program exits with code 1. If not set, errors are returned to the caller.
@@ -35,6 +34,20 @@ var (
 	ExitOnError = true
 	//nolint:gochecknoglobals
 	exitFunc = os.Exit
+
+	// Prefix is the prefix used for environment variables. If set, all
+	// environment variables will be prefixed with this value. For example, if
+	// Prefix is set to "MYAPP", the environment variable "MYAPP_FOO" will be
+	// used for the variable "FOO". If not set, no prefix will be used.
+	// This is useful for namespacing environment variables in larger applications.
+	//nolint:gochecknoglobals
+	Prefix       = ""
+	prefixedName = func(name string) string {
+		if Prefix == "" {
+			return name
+		}
+		return fmt.Sprintf("%s_%s", Prefix, strings.ToUpper(name))
+	}
 )
 
 // Register a variable with the given options. Returns a pointer to the
@@ -149,11 +162,11 @@ func Help() string {
 }
 
 func metaLength[T TypeConstraint](v *Var[T]) int {
-	// +5 for :, spaces and parentheses
-	const padding = 5
-	l := len(v.name) + len(reflect.TypeOf(v.value).String()) + padding
+	// Parentheses and spacing
+	const defaultPadding = 3
+	l := len(v.prefixedName()) + len(reflect.TypeOf(v.value).String()) + defaultPadding
 	if v.required {
-		l += 8
+		l += len(", required")
 	}
 	return l
 }
@@ -166,14 +179,14 @@ func getHelpString[T TypeConstraint](v *Var[T], longest int) string {
 	} else {
 		defaultInfo = fmt.Sprintf("(default: %v)", v.value)
 	}
-	name := fmt.Sprintf("%s (%s)", v.name, typeInfo)
+	name := fmt.Sprintf("%s (%s)", v.prefixedName(), typeInfo)
 
 	// <name> (<type>, [required]): <description> [(default: <value>)]\n
 	return fmt.Sprintf("%-*s: %s %s\n", longest, name, v.desc, defaultInfo)
 }
 
 func check[T TypeConstraint](v *Var[T], parser func(string) (T, error)) error {
-	value, exists := os.LookupEnv(v.name)
+	value, exists := os.LookupEnv(v.prefixedName())
 	if err := generalCheck(v, exists); err != nil {
 		return err
 	}
@@ -183,7 +196,7 @@ func check[T TypeConstraint](v *Var[T], parser func(string) (T, error)) error {
 	}
 
 	if !exists && v.create {
-		return os.Setenv(v.name, fmt.Sprintf("%v", v.value))
+		return os.Setenv(v.prefixedName(), fmt.Sprintf("%v", v.value))
 	}
 
 	parsedValue, err := parser(value)
@@ -191,16 +204,15 @@ func check[T TypeConstraint](v *Var[T], parser func(string) (T, error)) error {
 		return err
 	}
 
-	if v.validate != nil {
-		//nolint:govet
-		if err := v.validate(parsedValue); err != nil {
-			return fmt.Errorf("%w: %w", fmt.Errorf("%w: %s", ErrValidate, v.name), err)
-		}
-	}
-
+	// If both are set, accepted values take precedence
 	if v.acceptedValues != nil {
 		if !slices.Contains(v.acceptedValues, parsedValue) {
-			return fmt.Errorf("%w: %s %v", ErrAccepted, v.name, v.acceptedValues)
+			return fmt.Errorf("%w: %s %v", ErrAccepted, v.prefixedName(), v.acceptedValues)
+		}
+	} else if v.validate != nil {
+		//nolint:govet
+		if err := v.validate(parsedValue); err != nil {
+			return fmt.Errorf("%w: %w", fmt.Errorf("%w: %s", ErrValidate, v.prefixedName()), err)
 		}
 	}
 
@@ -211,24 +223,20 @@ func check[T TypeConstraint](v *Var[T], parser func(string) (T, error)) error {
 
 func generalCheck[T TypeConstraint](v *Var[T], exists bool) error {
 	if v.name == "" {
-		return fmt.Errorf("%w: %s", ErrName, v.name)
+		return fmt.Errorf("%w: %s", ErrName, v.prefixedName())
 	}
 
-	if _, nameExists := nameMap[v.name]; nameExists {
-		return fmt.Errorf("%w: %s", ErrNameExists, v.name)
+	if _, nameExists := nameMap[v.prefixedName()]; nameExists {
+		return fmt.Errorf("%w: %s", ErrNameExists, v.prefixedName())
 	}
-	nameMap[v.name] = true
+	nameMap[v.prefixedName()] = true
 
 	if v.required && !exists {
-		return fmt.Errorf("%w: %s", ErrRequired, v.name)
+		return fmt.Errorf("%w: %s", ErrRequired, v.prefixedName())
 	}
 
 	if v.required && v.create {
-		return fmt.Errorf("%w: %s", ErrCreateAndRequired, v.name)
-	}
-
-	if v.validate != nil && v.acceptedValues != nil {
-		return fmt.Errorf("%w: %s", ErrValidateAndAccepted, v.name)
+		return fmt.Errorf("%w: %s", ErrCreateAndRequired, v.prefixedName())
 	}
 
 	return nil

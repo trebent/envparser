@@ -50,4 +50,4 @@ func main() {
 
 ## Documentation
 
-See the [Golang package](https://pkg.go.dev/github.com/). Documentation is provided as package and type definitions.
+See the [Golang package](https://pkg.go.dev/github.com/). Documentation is provided as part of the code.

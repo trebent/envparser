@@ -1,5 +1,9 @@
 package envparser
 
+import (
+	"fmt"
+)
+
 type (
 	// TypeConstraint is a type constraint that allows only int, bool, string,
 	// and float64 types. This is used to restrict the types of the environment
@@ -49,4 +53,11 @@ func (v *Var[T]) Value() T {
 		panic("called before Parse()")
 	}
 	return v.value
+}
+
+func (v *Var[T]) prefixedName() string {
+	if Prefix == "" {
+		return v.name
+	}
+	return fmt.Sprintf("%s_%s", Prefix, v.name)
 }
