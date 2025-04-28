@@ -41,13 +41,7 @@ var (
 	// used for the variable "FOO". If not set, no prefix will be used.
 	// This is useful for namespacing environment variables in larger applications.
 	//nolint:gochecknoglobals
-	Prefix       = ""
-	prefixedName = func(name string) string {
-		if Prefix == "" {
-			return name
-		}
-		return fmt.Sprintf("%s_%s", Prefix, strings.ToUpper(name))
-	}
+	Prefix = ""
 )
 
 // Register a variable with the given options. Returns a pointer to the
