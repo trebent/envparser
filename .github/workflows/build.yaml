@@ -55,4 +55,4 @@ jobs:
           name: go-coverage-report-${{ matrix.go-version-alias }}
           path: coverage.html
       - name: Build
-        run: go build -o example-go-app ./examples/example.go
+        run: go build -o example-go-app ./examples/complex/example.go
