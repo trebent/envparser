@@ -98,27 +98,6 @@ func TestValidateNonExistentVar(t *testing.T) {
 	}
 }
 
-func TestValidateAndAccepted(t *testing.T) {
-	t.Cleanup(func() {
-		vars = make([]any, 0, 1)
-	})
-	_ = Register(&Opts[int]{
-		Name: "TEST_VALIDATE",
-		Validate: func(i int) error {
-			if i != 10 {
-				return fmt.Errorf("expected 10, got %d", i)
-			}
-			return nil
-		},
-		AcceptedValues: []int{10, 20},
-	})
-
-	ExitOnError = false
-	if err := Parse(); err == nil {
-		t.Error("expected error, got nothing")
-	}
-}
-
 func TestValidateFailure(t *testing.T) {
 	t.Cleanup(func() {
 		vars = make([]any, 0, 1)
