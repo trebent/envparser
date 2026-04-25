@@ -1,0 +1,35 @@
+version: 2
+updates:
+  - package-ecosystem: "gomod"
+    directories:
+      - "/"
+      - "/tools"
+    schedule:
+      interval: "daily"
+    groups:
+      go-minor/patch-versions:
+        applies-to: version-updates
+        update-types:
+          - "minor"
+          - "patch"
+      go-minor/patch-security-versions:
+        applies-to: security-updates
+        update-types:
+          - "minor"
+          - "patch"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "daily"
+    groups:
+      action-minor/patch-versions:
+        applies-to: version-updates
+        update-types:
+          - "minor"
+          - "patch"
+      action-minor/patch-security-versions:
+        applies-to: security-updates
+        update-types:
+          - "minor"
+          - "patch"
