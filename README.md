@@ -51,4 +51,4 @@ func main() {
 
 ## Documentation
 
-See the [Golang package](https://pkg.go.dev/github.com/). Documentation is provided as part of the code.
+See the [Golang package](https://pkg.go.dev/github.com/trebent/envparser). Documentation is provided as part of the code.
