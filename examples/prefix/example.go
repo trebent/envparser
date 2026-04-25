@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"os"
@@ -16,7 +17,11 @@ var (
 		Validate: func(level string) error {
 			acceptedLevels := []string{"DEBUG", "INFO", "WARN", "ERROR", "FATAL"}
 			if !slices.Contains(acceptedLevels, level) {
-				return fmt.Errorf("invalid log level: %s, accepted values are: %v", level, acceptedLevels)
+				return fmt.Errorf(
+					"invalid log level: %s, accepted values are: %v",
+					level,
+					acceptedLevels,
+				)
 			}
 			return nil
 		},
@@ -27,10 +32,10 @@ var (
 		Desc: "Server address.",
 		Validate: func(addr string) error {
 			if addr == "" {
-				return fmt.Errorf("address can't be empty")
+				return errors.New("address can't be empty")
 			}
 			if len(addr) > 255 {
-				return fmt.Errorf("address too long")
+				return errors.New("address too long")
 			}
 			return nil
 		},
@@ -52,7 +57,7 @@ func main() {
 	flag.Usage = func() {
 		fmt.Fprintf(flag.CommandLine.Output(), "Usage of %s:\n", os.Args[0])
 		fmt.Fprintf(flag.CommandLine.Output(), "\n")
-		fmt.Fprintf(flag.CommandLine.Output(), envparser.Help())
+		fmt.Fprint(flag.CommandLine.Output(), envparser.Help())
 	}
 	flag.Parse()
 

@@ -19,13 +19,20 @@ var (
 	//nolint:gochecknoglobals
 	parsed = false
 
-	ErrName              = errors.New("variable name is invalid")
-	ErrNameExists        = errors.New("variable name already exists")
-	ErrRequired          = errors.New("variable is required")
+	// ErrName indicates that the variable name is invalid. Variable names must be non-empty strings.
+	ErrName = errors.New("variable name is invalid")
+	// ErrNameExists indicates that a variable with the same name has already been registered. Variable names must be unique.
+	ErrNameExists = errors.New("variable name already exists")
+	// ErrRequired indicates that a required variable is missing from the environment.
+	ErrRequired = errors.New("variable is required")
+	// ErrCreateAndRequired indicates that a variable cannot be marked for creation and required at the same time. A variable
+	// that is marked for creation will be created with the default value if it does not exist in the environment, so it cannot be required.
 	ErrCreateAndRequired = errors.New(
 		"variable can't be marked for creation and required at the same time",
 	)
+	// ErrValidate indicates that the variable value failed validation. The error message will include the specific validation error.
 	ErrValidate = errors.New("variable validation failed")
+	// ErrAccepted indicates that the variable value is not in the list of accepted values. The error message will include the accepted values.
 	ErrAccepted = errors.New("variable value not in accepted values")
 
 	// ExitOnError ensures that encountered errors are printed to stderr and the
