@@ -1,6 +1,9 @@
 # envparser
 
-[![Main branch protection](https://github.com/trebent/envparser/actions/workflows/main-protection.yaml/badge.svg)](https://github.com/trebent/envparser/actions/workflows/main-protection.yaml)
+[![Main branch protection](https://github.com/trebent/envparser/actions/workflows/main.yaml/badge.svg)](https://github.com/trebent/envparser/actions/workflows/main.yaml)
+[![Code scanning](https://github.com/trebent/envparser/actions/workflows/code-scanning.yaml/badge.svg)](https://github.com/trebent/envparser/actions/workflows/code-scanning.yaml)
+[![License](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![Go Report Card](https://goreportcard.com/badge/github.com/trebent/envparser)](https://goreportcard.com/report/github.com/trebent/envparser)
 
 Declare your application environment variables in a standardised way!
 
