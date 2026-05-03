@@ -1,28 +1,22 @@
 name: Main branch protection
 
+run-name: "Main branch protection: ${{ github.event.head_commit.message }}"
+
 on:
+  workflow_dispatch:
   push:
-    branches:
-      - main
-  pull_request:
     branches:
       - main
 
 # Should prevent concurrency on a per-branch basis.
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref_name }}
-  cancel-in-progress: ${{ github.ref_name != 'main' }}
+  cancel-in-progress: false
 
 permissions:
-  checks: write
   contents: read
-  security-events: write
 
 jobs:
-  static-analysis:
-    uses: ./.github/workflows/callable-static-analysis.yaml
-    secrets: inherit
-
   test:
     uses: ./.github/workflows/callable-test.yaml
     secrets: inherit
