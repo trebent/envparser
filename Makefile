@@ -10,6 +10,9 @@ coverage:
 	@go tool cover -html=build/coverage.out -o build/coverage.html
 	@go tool cover -func=build/coverage.out | awk 'END {print $$3}'
 
+govulncheck:
+	@go tool -modfile=./tools/go.mod govulncheck ./...
+
 vulncheck-sarif:
 	@mkdir -p build
 	@go tool -modfile=./tools/go.mod govulncheck -format sarif ./... > build/govulncheck-report.sarif

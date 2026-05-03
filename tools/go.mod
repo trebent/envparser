@@ -1,4 +1,4 @@
-module github.com/trebent/zerologr/tools
+module github.com/trebent/envparser/tools
 
 go 1.26.2
 
