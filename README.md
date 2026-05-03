@@ -4,7 +4,7 @@
 [![Code scanning](https://github.com/trebent/envparser/actions/workflows/code-scanning.yaml/badge.svg)](https://github.com/trebent/envparser/actions/workflows/code-scanning.yaml)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Go Report Card](https://goreportcard.com/badge/github.com/trebent/envparser)](https://goreportcard.com/report/github.com/trebent/envparser)
-![tag](https://img.shields.io/github/v/tag/maansaake/envparser?label=latest%20version)
+![tag](https://img.shields.io/github/v/tag/trebent/envparser?label=latest%20version)
 
 Declare your application environment variables in a standardised way!
 
