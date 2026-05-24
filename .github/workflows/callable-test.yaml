@@ -52,7 +52,7 @@ jobs:
             unit-test-go-build-${{ runner.os }}-${{ matrix.go-version-alias }}-
 
       - name: Run unit tests with coverage
-        run: make unittest-json
+        run: make test/unit/json
 
       - name: Publish unit test results
         uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
@@ -67,7 +67,7 @@ jobs:
         if: always()
         run: |
           if [ -f build/coverage.out ]; then
-            make coverage-report | grep "^### Code Coverage:" >> "$GITHUB_STEP_SUMMARY" || true
+            make coverage/report | grep "^### Code Coverage:" >> "$GITHUB_STEP_SUMMARY" || true
           fi
 
       - name: Upload coverage report
