@@ -21,7 +21,7 @@ static-analysis/lint:
 static-analysis/vulncheck:
 	@go tool -modfile=./tools/go.mod govulncheck ./...
 
-static-analysis/vulncheck-sarif:
+static-analysis/vulncheck/sarif:
 	@mkdir -p build
 	@go tool -modfile=./tools/go.mod govulncheck -format sarif ./... > build/govulncheck-report.sarif
 
@@ -29,6 +29,6 @@ test/unit:
 	@mkdir -p build
 	@go test -v ./... -timeout 20s -failfast -coverprofile=build/coverage.out -covermode=atomic
 
-test/unit-json:
+test/unit/json:
 	@mkdir -p build
 	@go test -v -json -coverprofile=build/coverage.out -covermode=atomic ./... -timeout 20s -failfast > build/unit-test-output.json
