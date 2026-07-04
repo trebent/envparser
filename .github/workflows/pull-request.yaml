@@ -1,6 +1,6 @@
 name: Pull request validation
 
-run-name: "Pull request validation: ${{ github.event.pull_request.title }}"
+run-name: "Pull request validation: #${{ github.event.pull_request.title }}"
 
 on:
   pull_request:

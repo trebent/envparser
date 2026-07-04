@@ -3,17 +3,23 @@ updates:
   - package-ecosystem: "gomod"
     directories:
       - "/"
-      - "/tools"
     schedule:
-      interval: "daily"
+      interval: daily
+      day: monday
     groups:
-      go-minor/patch-versions:
-        applies-to: version-updates
+      go-updates:
         update-types:
           - "minor"
           - "patch"
-      go-minor/patch-security-versions:
-        applies-to: security-updates
+
+  - package-ecosystem: "gomod"
+    directories:
+      - "/tools"
+    schedule:
+      interval: weekly
+      day: tuesday
+    groups:
+      go-tool-updates:
         update-types:
           - "minor"
           - "patch"
@@ -21,15 +27,10 @@ updates:
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
-      interval: "daily"
+      interval: weekly
+      day: wednesday
     groups:
-      action-minor/patch-versions:
-        applies-to: version-updates
-        update-types:
-          - "minor"
-          - "patch"
-      action-minor/patch-security-versions:
-        applies-to: security-updates
+      action-updates:
         update-types:
           - "minor"
           - "patch"
